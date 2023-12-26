@@ -1,3 +1,7 @@
+<h1 align="center"><code>flippaa</code> - aa's flipper firmware</h1>
+
+Original readme:
+-----
 <h1 align="center">XFW - <code>Xtreme Firmware</code> for the Flipper Zero</h1>
 
 <p align="center">
