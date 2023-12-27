@@ -206,7 +206,6 @@ static void hid_gamepad_process(HidGamepad* hid_gamepad, InputEvent* event) {
             if(event->key == InputKeyOk) {
                 if(event->type == InputTypePress) {
                     model->ok_pressed = true;
-                } else if(event->type == InputTypeLong || event->type == InputTypeShort) {
                     model->last_key = hid_gamepad_get_selected_key(model);
                     hid_hal_gamepad_press(
                         hid_gamepad->hid, model->last_key);
@@ -220,9 +219,10 @@ static void hid_gamepad_process(HidGamepad* hid_gamepad, InputEvent* event) {
                 // If back is pressed for a short time, backspace
                 if(event->type == InputTypePress) {
                     model->back_pressed = true;
-                } else if(event->type == InputTypeShort) {
-                    hid_hal_gamepad_press(hid_gamepad->hid, HID_KEYBOARD_DELETE);
-                    hid_hal_gamepad_release(hid_gamepad->hid, HID_KEYBOARD_DELETE);
+                // } else if(event->type == InputTypeShort) {
+                //     hid_hal_gamepad_press(hid_gamepad->hid, HID);
+                //     hid_hal_gamepad_release(hid_gamepad->hid, HID_KEYBOARD_DELETE);
+                // } 
                 } else if(event->type == InputTypeRelease) {
                     model->back_pressed = false;
                 }
