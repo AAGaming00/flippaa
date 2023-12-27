@@ -1293,6 +1293,9 @@ Function,+,furi_hal_gpio_init_simple,void,"const GpioPin*, const GpioMode"
 Function,+,furi_hal_gpio_remove_int_callback,void,const GpioPin*
 Function,+,furi_hal_hid_consumer_key_press,_Bool,uint16_t
 Function,+,furi_hal_hid_consumer_key_release,_Bool,uint16_t
+Function,+,furi_hal_hid_gamepad_press,_Bool,uint16_t
+Function,+,furi_hal_hid_gamepad_release,_Bool,uint16_t
+Function,+,furi_hal_hid_gamepad_release_all,_Bool,
 Function,+,furi_hal_hid_get_led_state,uint8_t,
 Function,+,furi_hal_hid_is_connected,_Bool,
 Function,+,furi_hal_hid_kb_press,_Bool,uint16_t

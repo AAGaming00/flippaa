@@ -2,6 +2,7 @@ typedef enum {
     HidViewSubmenu,
     HidViewKeynote,
     HidViewKeyboard,
+    HidViewGamepad,
     HidViewNumpad,
     HidViewMedia,
     HidViewMusicMacOs,

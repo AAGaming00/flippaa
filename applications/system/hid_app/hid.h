@@ -17,6 +17,7 @@
 #include <gui/modules/popup.h>
 #include "views/hid_keynote.h"
 #include "views/hid_keyboard.h"
+#include "views/hid_gamepad.h"
 #include "views/hid_numpad.h"
 #include "views/hid_media.h"
 #include "views/hid_music_macos.h"
@@ -47,6 +48,7 @@ struct Hid {
     Submenu* device_type_submenu;
     HidKeynote* hid_keynote;
     HidKeyboard* hid_keyboard;
+    HidGamepad* hid_gamepad;
     HidNumpad* hid_numpad;
     HidMedia* hid_media;
     HidMusicMacos* hid_music_macos;
@@ -75,3 +77,7 @@ void hid_hal_mouse_scroll(Hid* instance, int8_t delta);
 void hid_hal_mouse_press(Hid* instance, uint16_t event);
 void hid_hal_mouse_release(Hid* instance, uint16_t event);
 void hid_hal_mouse_release_all(Hid* instance);
+
+void hid_hal_gamepad_press(Hid* instance, uint16_t event);
+void hid_hal_gamepad_release(Hid* instance, uint16_t event);
+void hid_hal_gamepad_release_all(Hid* instance);

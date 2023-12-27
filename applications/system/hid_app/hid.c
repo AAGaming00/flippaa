@@ -9,6 +9,7 @@ enum HidDebugSubmenuIndex {
     HidSubmenuIndexKeynote,
     HidSubmenuIndexKeynoteVertical,
     HidSubmenuIndexKeyboard,
+    HidSubmenuIndexGamepad,
     HidSubmenuIndexNumpad,
     HidSubmenuIndexMedia,
     HidSubmenuIndexMusicMacOs,
@@ -34,6 +35,9 @@ static void hid_submenu_callback(void* context, uint32_t index) {
     } else if(index == HidSubmenuIndexKeyboard) {
         app->view_id = HidViewKeyboard;
         view_dispatcher_switch_to_view(app->view_dispatcher, HidViewKeyboard);
+    } else if(index == HidSubmenuIndexGamepad) {
+        app->view_id = HidSubmenuIndexGamepad;
+        view_dispatcher_switch_to_view(app->view_dispatcher, HidSubmenuIndexGamepad);
     } else if(index == HidSubmenuIndexNumpad) {
         app->view_id = HidViewNumpad;
         view_dispatcher_switch_to_view(app->view_dispatcher, HidViewNumpad);
@@ -133,6 +137,8 @@ Hid* hid_alloc(HidTransport transport) {
     submenu_add_item(
         app->device_type_submenu, "Keyboard", HidSubmenuIndexKeyboard, hid_submenu_callback, app);
     submenu_add_item(
+        app->device_type_submenu, "Gamepad", HidSubmenuIndexGamepad, hid_submenu_callback, app);
+    submenu_add_item(
         app->device_type_submenu, "Numpad", HidSubmenuIndexNumpad, hid_submenu_callback, app);
     submenu_add_item(
         app->device_type_submenu, "Media", HidSubmenuIndexMedia, hid_submenu_callback, app);
@@ -195,6 +201,12 @@ Hid* hid_app_alloc_view(void* context) {
     view_set_previous_callback(hid_keyboard_get_view(app->hid_keyboard), hid_menu_view);
     view_dispatcher_add_view(
         app->view_dispatcher, HidViewKeyboard, hid_keyboard_get_view(app->hid_keyboard));
+
+    // Gamepad view
+    app->hid_gamepad = hid_gamepad_alloc(app);
+    view_set_previous_callback(hid_gamepad_get_view(app->hid_gamepad), hid_menu_view);
+    view_dispatcher_add_view(
+        app->view_dispatcher, HidViewGamepad, hid_gamepad_get_view(app->hid_gamepad));
 
     //Numpad keyboard view
     app->hid_numpad = hid_numpad_alloc(app);
@@ -427,6 +439,39 @@ void hid_hal_mouse_release_all(Hid* instance) {
     } else if(instance->transport == HidTransportUsb) {
         furi_hal_hid_mouse_release(HID_MOUSE_BTN_LEFT);
         furi_hal_hid_mouse_release(HID_MOUSE_BTN_RIGHT);
+    } else {
+        furi_crash();
+    }
+}
+
+void hid_hal_gamepad_press(Hid* instance, uint16_t event) {
+    furi_assert(instance);
+    if(instance->transport == HidTransportBle) {
+        // furi_hal_bt_hid_mouse_press(event);
+    } else if(instance->transport == HidTransportUsb) {
+        furi_hal_hid_gamepad_press(event);
+    } else {
+        furi_crash();
+    }
+}
+
+void hid_hal_gamepad_release(Hid* instance, uint16_t event) {
+    furi_assert(instance);
+    if(instance->transport == HidTransportBle) {
+        // furi_hal_bt_hid_mouse_release(event);
+    } else if(instance->transport == HidTransportUsb) {
+        furi_hal_hid_gamepad_release(event);
+    } else {
+        furi_crash();
+    }
+}
+
+void hid_hal_gamepad_release_all(Hid* instance) {
+    furi_assert(instance);
+    if(instance->transport == HidTransportBle) {
+        // furi_hal_bt_hid_mouse_release_all();
+    } else if(instance->transport == HidTransportUsb) {
+        furi_hal_hid_gamepad_release_all();
     } else {
         furi_crash();
     }

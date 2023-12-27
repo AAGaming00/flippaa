@@ -4,7 +4,7 @@ import posixpath
 
 # For more details on these options, run 'fbt -h'
 
-FIRMWARE_ORIGIN = "Xtreme"
+FIRMWARE_ORIGIN = "flippaa"
 
 # Default hardware target
 TARGET_HW = 7

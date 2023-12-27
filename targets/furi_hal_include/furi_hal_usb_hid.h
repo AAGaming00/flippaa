@@ -265,6 +265,23 @@ bool furi_hal_hid_consumer_key_press(uint16_t button);
  */
 bool furi_hal_hid_consumer_key_release(uint16_t button);
 
+/** Set gamepad button to pressed state and send HID report
+ *
+ * @param      button  button id
+ */
+bool furi_hal_hid_gamepad_press(uint16_t button);
+
+/** Set gamepad button to released state and send HID report
+ *
+ * @param      button  button id
+ */
+bool furi_hal_hid_gamepad_release(uint16_t button);
+
+/** Clear all pressed buttons and send HID report
+ *
+ */
+bool furi_hal_hid_gamepad_release_all();
+
 #ifdef __cplusplus
 }
 #endif

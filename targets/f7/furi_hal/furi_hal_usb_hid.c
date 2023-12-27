@@ -12,6 +12,8 @@
 
 #define HID_INTERVAL 2
 
+#define TAG "FuriHID"
+
 struct HidIntfDescriptor {
     struct usb_interface_descriptor hid;
     struct usb_hid_descriptor hid_desc;
@@ -27,7 +29,7 @@ enum HidReportId {
     ReportIdKeyboard = 1,
     ReportIdMouse = 2,
     ReportIdConsumer = 3,
-    ReportIdGenericGamepad = 4,
+    ReportIdGamepad = 4,
 };
 
 // TODO allow switching descriptors to support real console controller emulation
@@ -127,7 +129,7 @@ static const uint8_t hid_report_desc[] = {
     HID_USAGE_PAGE(HID_PAGE_DESKTOP),
     HID_USAGE(HID_DESKTOP_GAMEPAD),
     HID_COLLECTION(HID_APPLICATION_COLLECTION),
-        HID_REPORT_ID(ReportIdGenericGamepad),
+        HID_REPORT_ID(ReportIdGamepad),
         HID_USAGE_PAGE(HID_PAGE_BUTTON),
         HID_USAGE_MINIMUM(HID_BUTTON_1),
         HID_USAGE_MAXIMUM(HID_BUTTON_16),
@@ -146,18 +148,7 @@ static const uint8_t hid_report_desc[] = {
         HID_REPORT_SIZE(8),
         HID_REPORT_COUNT(1),
         HID_INPUT(HID_IOF_DATA | HID_IOF_VARIABLE | HID_IOF_ABSOLUTE | HID_IOF_NO_WRAP | HID_IOF_LINEAR | HID_IOF_PREFERRED_STATE | HID_IOF_NULLSTATE | HID_IOF_BITFIELD),
-        0x65, 0x00, // Unit (None)
-        // HAT Switch (1 nibble)
-		// HID_RI_USAGE_PAGE(8,1),
-		// HID_RI_LOGICAL_MAXIMUM(8,7),
-		// HID_RI_PHYSICAL_MAXIMUM(16,315),
-		// HID_RI_REPORT_SIZE(8,4),
-		// HID_RI_REPORT_COUNT(8,1),
-		// HID_RI_UNIT(8,20),
-		// HID_RI_USAGE(8,57),
-		// HID_RI_INPUT(8,66),
-		// HID_RI_UNIT(8,0),
-        // HID_USAGE_PAGE(HID_PAGE_DESKTOP),
+        // 0x65, 0x00, // Unit (None)
         HID_LOGICAL_MINIMUM(-127),
         HID_LOGICAL_MAXIMUM(127),
         HID_PHYSICAL_MINIMUM(-127),
@@ -271,7 +262,6 @@ struct HidReportConsumer {
 struct HidReportGamepad {
     uint8_t report_id;
     uint16_t btn;
-    // bool
     uint8_t  HAT;    // HAT switch; one nibble w/ unused nibble
 	uint8_t  LX;     // Left  Stick X
 	uint8_t  LY;     // Left  Stick Y
@@ -420,6 +410,34 @@ bool furi_hal_hid_consumer_key_release(uint16_t button) {
     return hid_send_report(ReportIdConsumer);
 }
 
+bool furi_hal_hid_gamepad_press(uint16_t button) {
+    hid_report.gamepad.btn |= (1 << (button - 1)); // The header starts at 1 but the actual value starts at 0
+    FURI_LOG_D(TAG, "Gamepad: Pressing button 0x%x, new button state 0x%x", button, hid_report.gamepad.btn);
+    return hid_send_report(ReportIdGamepad);
+}
+
+bool furi_hal_hid_gamepad_release(uint16_t button) {
+    hid_report.gamepad.btn &= ~(1 << (button - 1));
+    FURI_LOG_D(TAG, "Gamepad: Releasing button 0x%x, new button state 0x%x", button, hid_report.gamepad.btn);
+    return hid_send_report(ReportIdGamepad);
+}
+
+bool furi_hal_hid_gamepad_release_all() {
+    for(uint16_t button = 0; button < HID_GAMEPAD_MAX_BUTTONS; button++) {
+        FURI_LOG_D(TAG, "Gamepad: Releasing all buttons idx 0x%x", button);
+        hid_report.gamepad.btn &= ~button;
+    }
+    hid_report.gamepad.HAT = 0;
+    hid_report.gamepad.LX = 0;
+    hid_report.gamepad.LY = 0;
+    hid_report.gamepad.RX = 0;
+    hid_report.gamepad.RY = 0;
+    hid_report.gamepad.LS = 0;
+    hid_report.gamepad.RS = 0;
+    FURI_LOG_D(TAG, "Gamepad: Releasing all buttons, new button state 0x%x", hid_report.gamepad.btn);
+    return hid_send_report(ReportIdGamepad);
+}
+
 static void* hid_set_string_descr(char* str) {
     furi_assert(str);
 
@@ -440,7 +458,7 @@ static void hid_init(usbd_device* dev, FuriHalUsbInterface* intf, void* ctx) {
     hid_report.keyboard.report_id = ReportIdKeyboard;
     hid_report.mouse.report_id = ReportIdMouse;
     hid_report.consumer.report_id = ReportIdConsumer;
-    hid_report.gamepad.report_id = ReportIdGenericGamepad;
+    hid_report.gamepad.report_id = ReportIdGamepad;
 
     usb_hid.dev_descr->iManufacturer = 0;
     usb_hid.dev_descr->iProduct = 0;
@@ -521,7 +539,7 @@ static bool hid_send_report(uint8_t report_id) {
             usbd_ep_write(usb_dev, HID_EP_IN, &hid_report.mouse, sizeof(hid_report.mouse));
         else if(report_id == ReportIdConsumer)
             usbd_ep_write(usb_dev, HID_EP_IN, &hid_report.consumer, sizeof(hid_report.consumer));
-        else if(report_id == ReportIdGenericGamepad)
+        else if(report_id == ReportIdGamepad)
             usbd_ep_write(usb_dev, HID_EP_IN, &hid_report.gamepad, sizeof(hid_report.gamepad));
     }
     return true;
