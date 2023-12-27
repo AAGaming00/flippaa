@@ -101,9 +101,14 @@ typedef struct {
     CanvasFontParameters* font_params[FontSwapCount];
 } XtremeAssets;
 
+typedef struct {
+    bool align_with_bg;
+} FlippaaSettings;
+
 void XTREME_SETTINGS_LOAD();
 void XTREME_SETTINGS_SAVE();
 extern XtremeSettings xtreme_settings;
+extern FlippaaSettings flippaa_settings;
 
 void XTREME_ASSETS_LOAD();
 void XTREME_ASSETS_FREE();

@@ -101,29 +101,45 @@ void cli_print_usage(const char* cmd, const char* usage, const char* arg) {
 }
 
 void cli_motd() {
-    printf(
-        "\033[0m\r\n"
-        "                                                     ,-' \\_/    `\\\r\n"
-        "\033[1;31m__\033[0m  \033[1;31m__\033[37m_\033[0m                              ___ ___    ___ (          ,  |\r\n"
-        "\033[1;31m\\\033[0m \033[1;31m\\/\033[0m \033[1;31m/\033[0m \033[1m|_ _ __ ___ _ __ ___   ___\033[0m   / ___| |   |_ _| `-.-'`-.-'/|_|\r\n"
-        " \033[1;31m\\\033[0m  \033[1;31m/\033[37m| __| \'__/ _ \\ \'_ ` _ \\ / _ \\\033[0m | |   | |    | |     \\     / | |\r\n"
-        " \033[1;31m/\033[0m  \033[1;31m\\\033[37m| |_| | |  __/ | | | | |  __/\033[0m | |___| |___ | |     |=[]=: / ,'\r\n"
-        "\033[1;31m/_/\\_\\\033[37m\\__|_|  \\___|_| |_| |_|\\___|\033[0m  \\____|_____|___|    /    `\\ '\r\n"
-        "                                                       :  \\/   )\r\n"
-        "Welcome to the \033[1;31mX\033[37mtreme\033[0m Command Line Interface!          |  /    ;\r\n"
-        "Visit \033[1;31mhttps://flipper-xtre.me/\033[0m for even more fun       | /    /"
-        "\r\n");
-
+    const char* branch;
+    const char* version;
+    const char* githash;
+    const char* dirty;
+    const char* build_date;
     const Version* firmware_version = furi_hal_version_get_firmware_version();
     if(firmware_version) {
-        printf(
-            "Firmware version: %s %s (%s%s built on %s)\r\n",
-            version_get_gitbranch(firmware_version),
-            version_get_version(firmware_version),
-            version_get_githash(firmware_version),
-            version_get_dirty_flag(firmware_version) ? "-dirty" : "",
-            version_get_builddate(firmware_version));
+        branch = version_get_gitbranch(firmware_version);
+        version = version_get_version(firmware_version);
+        githash = version_get_githash(firmware_version);
+        dirty = version_get_dirty_flag(firmware_version) ? "-dirty" : "";
+        build_date = version_get_builddate(firmware_version);
+    } else {
+        branch = "unknown";
+        version = "git";
+        githash = "unknown";
+        dirty = "-dirty";
+        build_date = "unknown";
     }
+    printf(
+        "               ████                                                                                                                        ██\r\n"
+        "               ██  ████                                                                                                                    ██\r\n"
+        "               ██      ██\r\n"
+        "               ██████    ██                                      ███          ████████    ████████   ████████    ████████  ████  ██      ████      ██  ████      ████████\r\n"
+        "               ████████    ██                                ████ ██        ██      ██  ██      ██ ██      ██  ██      ██  ██  ██  ██      ██      ████    ██  ██      ██\r\n"
+        "               ████████     ██                           ████     ██        ██      ██  ██      ██ ██      ██  ██      ██  ██  ██  ██      ██      ██      ██  ██      ██\r\n"
+        "               ██████████     ██████████████           ██        ███        ██    ████  ██    ████ ██      ██  ██    ████  ██  ██  ██      ██      ██      ██  ██      ██\r\n"
+        "               ██████████   ██              ████     ██          ███          ████  ██    ████  ██   ████████    ████  ██  ██      ██    ██████    ██      ██    ████████\r\n"
+        "               ██████████████                  ██████          █████                                       ██                                                          ██\r\n"
+        "               ████████                            ██        ███████                                       ██                                                          ██\r\n"
+        "               ██████                                ██      ██████                                  ██████                                                      ██████\r\n"
+        "                 █████████████████                     ██  ████████\r\n"
+        "           ██████                 ██████████             ██████████         flippaa %s %s (%s%s built on %s)\r\n"
+        "███████████████████████████                 ███████        ████████         Welcome to the CLI!\r\n"
+        "██                         █████████████████       ██████  ██████\r\n"
+        "  ████                                      █████        ████████\r\n"
+        "      ████                                       ██████          ███\r\n"
+        "         ████                                          ██████       ██████"
+        "\r\n", branch, version, githash, dirty, build_date);
 }
 
 void cli_nl(Cli* cli) {

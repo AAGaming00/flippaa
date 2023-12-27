@@ -27,9 +27,11 @@ enum HidReportId {
     ReportIdKeyboard = 1,
     ReportIdMouse = 2,
     ReportIdConsumer = 3,
+    ReportIdGenericGamepad = 4,
 };
 
-/* HID report descriptor: keyboard + mouse + consumer control */
+// TODO allow switching descriptors to support real console controller emulation
+/* HID report descriptor: keyboard + mouse + consumer control + gamepad */
 static const uint8_t hid_report_desc[] = {
     // clang-format off
     HID_USAGE_PAGE(HID_PAGE_DESKTOP),
@@ -120,6 +122,56 @@ static const uint8_t hid_report_desc[] = {
         // Input - Consumer control keys
         HID_INPUT(HID_IOF_DATA | HID_IOF_ARRAY | HID_IOF_ABSOLUTE),
     HID_END_COLLECTION,
+
+    // https://learn.adafruit.com/custom-hid-devices-in-circuitpython/report-descriptors
+    HID_USAGE_PAGE(HID_PAGE_DESKTOP),
+    HID_USAGE(HID_DESKTOP_GAMEPAD),
+    HID_COLLECTION(HID_APPLICATION_COLLECTION),
+        HID_REPORT_ID(ReportIdGenericGamepad),
+        HID_USAGE_PAGE(HID_PAGE_BUTTON),
+        HID_USAGE_MINIMUM(HID_BUTTON_1),
+        HID_USAGE_MAXIMUM(HID_BUTTON_16),
+        HID_LOGICAL_MINIMUM(0),
+        HID_LOGICAL_MAXIMUM(1),
+        HID_REPORT_SIZE(1),
+        HID_REPORT_COUNT(16),
+        HID_INPUT(HID_IOF_DATA | HID_IOF_VARIABLE | HID_IOF_ABSOLUTE | HID_IOF_NO_WRAP | HID_IOF_LINEAR | HID_IOF_PREFERRED_STATE | HID_IOF_NO_NULL_POSITION | HID_IOF_BITFIELD),
+        HID_USAGE_PAGE(HID_PAGE_DESKTOP),
+        HID_USAGE(HID_DESKTOP_HAT_SWITCH),
+        HID_LOGICAL_MINIMUM(0),
+        HID_LOGICAL_MAXIMUM(7),
+        HID_PHYSICAL_MINIMUM(0),
+        HID_PHYSICAL_MAXIMUM(315),
+        // 0x64, 0x14, // TODO use funcs for this Unit (System: English Rotation, Length: Centimeter)
+        HID_REPORT_SIZE(8),
+        HID_REPORT_COUNT(1),
+        HID_INPUT(HID_IOF_DATA | HID_IOF_VARIABLE | HID_IOF_ABSOLUTE | HID_IOF_NO_WRAP | HID_IOF_LINEAR | HID_IOF_PREFERRED_STATE | HID_IOF_NULLSTATE | HID_IOF_BITFIELD),
+        0x65, 0x00, // Unit (None)
+        // HAT Switch (1 nibble)
+		// HID_RI_USAGE_PAGE(8,1),
+		// HID_RI_LOGICAL_MAXIMUM(8,7),
+		// HID_RI_PHYSICAL_MAXIMUM(16,315),
+		// HID_RI_REPORT_SIZE(8,4),
+		// HID_RI_REPORT_COUNT(8,1),
+		// HID_RI_UNIT(8,20),
+		// HID_RI_USAGE(8,57),
+		// HID_RI_INPUT(8,66),
+		// HID_RI_UNIT(8,0),
+        // HID_USAGE_PAGE(HID_PAGE_DESKTOP),
+        HID_LOGICAL_MINIMUM(-127),
+        HID_LOGICAL_MAXIMUM(127),
+        HID_PHYSICAL_MINIMUM(-127),
+        HID_PHYSICAL_MAXIMUM(127),
+        HID_USAGE(HID_DESKTOP_X),
+        HID_USAGE(HID_DESKTOP_Y),
+        HID_USAGE(HID_DESKTOP_Z),
+        HID_USAGE(HID_DESKTOP_RZ),
+        HID_USAGE(HID_DESKTOP_RX),
+        HID_USAGE(HID_DESKTOP_RY),
+        HID_REPORT_SIZE(8),
+        HID_REPORT_COUNT(6),
+        HID_INPUT(HID_IOF_DATA | HID_IOF_VARIABLE | HID_IOF_ABSOLUTE | HID_IOF_NO_WRAP | HID_IOF_LINEAR | HID_IOF_PREFERRED_STATE | HID_IOF_NO_NULL_POSITION | HID_IOF_BITFIELD),
+    HID_END_COLLECTION
     // clang-format on
 };
 
@@ -212,6 +264,22 @@ struct HidReportConsumer {
     uint16_t btn[HID_CONSUMER_MAX_KEYS];
 } FURI_PACKED;
 
+// TODO move into stm library
+#define HID_GAMEPAD_MAX_BUTTONS 16
+
+// TODO finish
+struct HidReportGamepad {
+    uint8_t report_id;
+    uint16_t btn;
+    // bool
+    uint8_t  HAT;    // HAT switch; one nibble w/ unused nibble
+	uint8_t  LX;     // Left  Stick X
+	uint8_t  LY;     // Left  Stick Y
+	uint8_t  RX;     // Right Stick X
+	uint8_t  RY;     // Right Stick Y
+	uint8_t  LS;     // Right Shoulder
+	uint8_t  RS;     // Right Stick
+} FURI_PACKED;
 struct HidReportLED {
     uint8_t report_id;
     uint8_t led_state;
@@ -221,6 +289,7 @@ static struct HidReport {
     struct HidReportKB keyboard;
     struct HidReportMouse mouse;
     struct HidReportConsumer consumer;
+    struct HidReportGamepad gamepad;
 } FURI_PACKED hid_report;
 
 static void hid_init(usbd_device* dev, FuriHalUsbInterface* intf, void* ctx);
@@ -371,6 +440,7 @@ static void hid_init(usbd_device* dev, FuriHalUsbInterface* intf, void* ctx) {
     hid_report.keyboard.report_id = ReportIdKeyboard;
     hid_report.mouse.report_id = ReportIdMouse;
     hid_report.consumer.report_id = ReportIdConsumer;
+    hid_report.gamepad.report_id = ReportIdGenericGamepad;
 
     usb_hid.dev_descr->iManufacturer = 0;
     usb_hid.dev_descr->iProduct = 0;
@@ -451,6 +521,8 @@ static bool hid_send_report(uint8_t report_id) {
             usbd_ep_write(usb_dev, HID_EP_IN, &hid_report.mouse, sizeof(hid_report.mouse));
         else if(report_id == ReportIdConsumer)
             usbd_ep_write(usb_dev, HID_EP_IN, &hid_report.consumer, sizeof(hid_report.consumer));
+        else if(report_id == ReportIdGenericGamepad)
+            usbd_ep_write(usb_dev, HID_EP_IN, &hid_report.gamepad, sizeof(hid_report.gamepad));
     }
     return true;
 }

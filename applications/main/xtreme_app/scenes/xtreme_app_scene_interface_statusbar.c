@@ -6,6 +6,7 @@ enum VarItemListIndex {
     VarItemListIndexStatusIcons,
     VarItemListIndexBarBorders,
     VarItemListIndexBarBackground,
+    VarItemListIndexAlignWithBg,
 };
 
 void xtreme_app_scene_interface_statusbar_var_item_list_callback(void* context, uint32_t index) {
@@ -61,6 +62,18 @@ static void xtreme_app_scene_interface_statusbar_bar_background_changed(Variable
     bool value = variable_item_get_current_value_index(item);
     variable_item_set_current_value_text(item, value ? "ON" : "OFF");
     xtreme_settings.bar_background = value;
+    variable_item_set_locked(
+        variable_item_list_get(app->var_item_list, VarItemListIndexAlignWithBg),
+        !value,
+        "Requires Bar Background");
+    app->save_settings = true;
+}
+
+static void xtreme_app_scene_interface_statusbar_align_with_bg_changed(VariableItem* item) {
+    XtremeApp* app = variable_item_get_context(item);
+    bool value = variable_item_get_current_value_index(item);
+    variable_item_set_current_value_text(item, value ? "ON" : "OFF");
+    flippaa_settings.align_with_bg = value;
     app->save_settings = true;
 }
 
@@ -113,6 +126,16 @@ void xtreme_app_scene_interface_statusbar_on_enter(void* context) {
         app);
     variable_item_set_current_value_index(item, xtreme_settings.bar_background);
     variable_item_set_current_value_text(item, xtreme_settings.bar_background ? "ON" : "OFF");
+
+    item = variable_item_list_add(
+        var_item_list,
+        "Align w/ Background",
+        2,
+        xtreme_app_scene_interface_statusbar_align_with_bg_changed,
+        app);
+    variable_item_set_current_value_index(item, flippaa_settings.align_with_bg);
+    variable_item_set_current_value_text(item, flippaa_settings.align_with_bg ? "ON" : "OFF");
+    variable_item_set_locked(item, !xtreme_settings.bar_background, "Requires Bar Background");
 
     variable_item_list_set_enter_callback(
         var_item_list, xtreme_app_scene_interface_statusbar_var_item_list_callback, app);

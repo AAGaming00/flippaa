@@ -106,8 +106,21 @@ static void flipper_boot_status(Canvas* canvas, const char* text) {
     canvas_reset(canvas);
     canvas_draw_str_aligned(canvas, 64, 40, AlignCenter, AlignCenter, text);
     canvas_set_font(canvas, FontPrimary);
-    canvas_draw_str_aligned(canvas, 64, 24, AlignCenter, AlignCenter, "Xtreme is Booting");
+    canvas_draw_str_aligned(canvas, 64, 24, AlignCenter, AlignCenter, "flippaa is booting...");
     canvas_commit(canvas);
+}
+
+static void flipper_start_service_and_show(const FlipperInternalApplication* service, Canvas* canvas) {
+    char* starting_text = "Starting service ";
+    int starting_len = strlen(starting_text);
+    // strlen includes null terminator so we don't need to add one for the space
+    char* service_name_str = malloc(starting_len + strlen(service->name));
+    strcpy(service_name_str, starting_text);
+    // once again we don't need +1
+    strcpy(service_name_str + starting_len, service->name);
+    flipper_boot_status(canvas, service_name_str);
+    free(service_name_str);
+    flipper_start_service(service);
 }
 
 void flipper_init() {
@@ -118,19 +131,22 @@ void flipper_init() {
 
     // Start storage service first, thanks OFW :/
     flipper_boot_status(canvas, "Initializing Storage");
-    flipper_start_service(&FLIPPER_SERVICES[0]);
+    flipper_start_service_and_show(&FLIPPER_SERVICES[0], canvas);
 
     if(furi_hal_is_normal_boot()) {
         furi_record_open(RECORD_STORAGE);
         furi_record_close(RECORD_STORAGE);
+        furi_hal_light_sequence("rgb R");
         flipper_boot_status(canvas, "Migrating Files");
         flipper_migrate_files();
+        furi_hal_light_sequence("rgb RG");
         flipper_boot_status(canvas, "Starting Namespoof");
         NAMESPOOF_INIT();
-        flipper_boot_status(canvas, "Loading Xtreme Settings");
+        furi_hal_light_sequence("rgb B");
+        flipper_boot_status(canvas, "Loading Settings");
         XTREME_SETTINGS_LOAD();
         furi_hal_light_sequence("rgb RB");
-        flipper_boot_status(canvas, "Loading Xtreme Assets");
+        flipper_boot_status(canvas, "Loading Assets");
         XTREME_ASSETS_LOAD();
     } else {
         FURI_LOG_I(TAG, "Special boot, skipping optional components");
@@ -138,10 +154,13 @@ void flipper_init() {
 
     // Everything else
     flipper_boot_status(canvas, "Initializing Services");
+    furi_hal_light_sequence("rgb G");
     for(size_t i = 1; i < FLIPPER_SERVICES_COUNT; i++) {
-        flipper_start_service(&FLIPPER_SERVICES[i]);
+        flipper_start_service_and_show(&FLIPPER_SERVICES[i], canvas);
     }
     canvas_free(canvas);
+
+    furi_hal_light_sequence("rgb");
 
     FURI_LOG_I(TAG, "Startup complete");
 }

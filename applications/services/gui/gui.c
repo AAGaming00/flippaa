@@ -105,7 +105,7 @@ static void gui_redraw_status_bar(Gui* gui, bool need_attention) {
         canvas_draw_box(gui->canvas, 89, 3, 38, 6);
         canvas_set_color(gui->canvas, ColorBlack);
         canvas_set_bitmap_mode(gui->canvas, 1);
-        canvas_draw_icon(gui->canvas, 0, 0, &I_Background_128x11);
+        canvas_draw_icon(gui->canvas, 0, flippaa_settings.align_with_bg ? 2 : 0, &I_Background_128x11);
     } else {
         canvas_set_color(gui->canvas, ColorBlack);
     }
@@ -178,6 +178,7 @@ static void gui_redraw_status_bar(Gui* gui, bool need_attention) {
     // Left side
     if(xtreme_settings.status_icons) {
         x = 2;
+        uint8_t icons_y = flippaa_settings.align_with_bg ? GUI_STATUS_BAR_Y + 2 : GUI_STATUS_BAR_Y;
         ViewPortArray_it(it, gui->layers[GuiLayerStatusBarLeft]);
         while(!ViewPortArray_end_p(it) && (right_used + left_used) < GUI_STATUS_BAR_WIDTH) {
             ViewPort* view_port = *ViewPortArray_ref(it);
@@ -188,7 +189,7 @@ static void gui_redraw_status_bar(Gui* gui, bool need_attention) {
                 canvas_frame_set(
                     gui->canvas,
                     x - 1,
-                    GUI_STATUS_BAR_Y + 1,
+                    icons_y + 1,
                     width + 2,
                     GUI_STATUS_BAR_WORKAREA_HEIGHT + 2);
                 if(xtreme_settings.bar_borders) {
@@ -199,7 +200,7 @@ static void gui_redraw_status_bar(Gui* gui, bool need_attention) {
                 canvas_set_color(gui->canvas, ColorBlack);
                 // ViewPort draw
                 canvas_frame_set(
-                    gui->canvas, x, GUI_STATUS_BAR_Y + 2, width, GUI_STATUS_BAR_WORKAREA_HEIGHT);
+                    gui->canvas, x, icons_y + 2, width, GUI_STATUS_BAR_WORKAREA_HEIGHT);
                 view_port_draw(view_port, gui->canvas);
                 // Recalculate next position
                 left_used += (width + 2);
@@ -214,19 +215,19 @@ static void gui_redraw_status_bar(Gui* gui, bool need_attention) {
             canvas_frame_set(
                 gui->canvas,
                 x - 1,
-                GUI_STATUS_BAR_Y + 1,
+                icons_y + 1,
                 width + 2,
                 GUI_STATUS_BAR_WORKAREA_HEIGHT + 2);
             if(xtreme_settings.bar_borders) {
                 canvas_set_color(gui->canvas, ColorWhite);
                 canvas_draw_box(
-                    gui->canvas, 0, 0, canvas_width(gui->canvas), canvas_height(gui->canvas));
+                    gui->canvas, 0, icons_y, canvas_width(gui->canvas), canvas_height(gui->canvas));
             }
             canvas_set_color(gui->canvas, ColorBlack);
             // Draw Icon
             canvas_frame_set(
-                gui->canvas, x, GUI_STATUS_BAR_Y + 2, width, GUI_STATUS_BAR_WORKAREA_HEIGHT);
-            canvas_draw_icon(gui->canvas, 0, 0, &I_Hidden_window_9x8);
+                gui->canvas, x, icons_y + 2, width, GUI_STATUS_BAR_WORKAREA_HEIGHT);
+            canvas_draw_icon(gui->canvas, 0, icons_y, &I_Hidden_window_9x8);
             // Recalculate next position
             left_used += (width + 2);
             x += (width + 2);
@@ -236,19 +237,19 @@ static void gui_redraw_status_bar(Gui* gui, bool need_attention) {
             canvas_frame_set(gui->canvas, 0, 0, left_used + 3, GUI_STATUS_BAR_HEIGHT);
             if(xtreme_settings.bar_borders) {
                 canvas_draw_rframe(
-                    gui->canvas, 0, 0, canvas_width(gui->canvas), canvas_height(gui->canvas), 1);
+                    gui->canvas, 0, icons_y, canvas_width(gui->canvas), canvas_height(gui->canvas), 1);
                 canvas_draw_line(
                     gui->canvas,
                     canvas_width(gui->canvas) - 2,
-                    1,
+                    icons_y+ 1,
                     canvas_width(gui->canvas) - 2,
-                    canvas_height(gui->canvas) - 2);
+                    icons_y + canvas_height(gui->canvas) - 2);
                 canvas_draw_line(
                     gui->canvas,
                     1,
-                    canvas_height(gui->canvas) - 2,
+                    icons_y + canvas_height(gui->canvas) - 2,
                     canvas_width(gui->canvas) - 2,
-                    canvas_height(gui->canvas) - 2);
+                    icons_y + canvas_height(gui->canvas) - 2);
             }
         }
     }

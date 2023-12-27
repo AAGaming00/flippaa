@@ -24,7 +24,7 @@ if __name__ == "__main__":
         os.environ["ARTIFACT_TGZ"],
         os.environ["ARTIFACT_SDK"],
     ):
-        path = f"XFW-Dev/{file}"
+        path = f"flippaa-Dev/{file}"
         # try:
         #     client.delete(path)
         # except Exception:

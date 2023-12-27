@@ -45,8 +45,13 @@ XtremeSettings xtreme_settings = {
     .file_naming_prefix_after = false, // Before
 };
 
+FlippaaSettings flippaa_settings = {
+    .align_with_bg = false, // ON
+};
+
 void XTREME_SETTINGS_LOAD() {
     XtremeSettings* x = &xtreme_settings;
+    FlippaaSettings* f = &flippaa_settings;
     Storage* storage = furi_record_open(RECORD_STORAGE);
     FlipperFormat* file = flipper_format_file_alloc(storage);
     if(flipper_format_file_open_existing(file, XTREME_SETTINGS_PATH)) {
@@ -136,6 +141,11 @@ void XTREME_SETTINGS_LOAD() {
         }
         if(flipper_format_read_uint32(file, "battery_icon", &u, 1)) {
             x->battery_icon = CLAMP(u, BatteryIconCount - 1U, 0U);
+        } else {
+            flipper_format_rewind(file);
+        }
+        if(flipper_format_read_bool(file, "align_with_bg", &b, 1)) {
+            f->align_with_bg = b;
         } else {
             flipper_format_rewind(file);
         }
@@ -249,6 +259,7 @@ void XTREME_SETTINGS_LOAD() {
 
 void XTREME_SETTINGS_SAVE() {
     XtremeSettings* x = &xtreme_settings;
+    FlippaaSettings* f = &flippaa_settings;
     Storage* storage = furi_record_open(RECORD_STORAGE);
     FlipperFormat* file = flipper_format_file_alloc(storage);
     if(flipper_format_file_open_always(file, XTREME_SETTINGS_PATH)) {
@@ -273,6 +284,7 @@ void XTREME_SETTINGS_SAVE() {
         flipper_format_write_bool(file, "lockscreen_transparent", &x->lockscreen_transparent, 1);
         e = x->battery_icon;
         flipper_format_write_uint32(file, "battery_icon", &e, 1);
+        flipper_format_write_bool(file, "align_with_bg", &f->align_with_bg, 1);
         flipper_format_write_bool(file, "statusbar_clock", &x->statusbar_clock, 1);
         flipper_format_write_bool(file, "status_icons", &x->status_icons, 1);
         flipper_format_write_bool(file, "bar_borders", &x->bar_borders, 1);
