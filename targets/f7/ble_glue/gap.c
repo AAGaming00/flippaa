@@ -37,6 +37,7 @@ typedef struct {
     FuriThread* thread;
     FuriMessageQueue* command_queue;
     bool enable_adv;
+    bool is_discoverable;
 } Gap;
 
 typedef enum {
@@ -44,6 +45,8 @@ typedef enum {
     GapCommandAdvLowPower,
     GapCommandAdvStop,
     GapCommandKillThread,
+    GapCommandSetDiscoverableOn,
+    GapCommandSetDiscoverableOff,
 } GapCommand;
 
 // Identity root key
@@ -202,6 +205,13 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void* pckt) {
             break;
 
         case ACI_GAP_PASS_KEY_REQ_VSEVT_CODE: {
+            if (!gap_get_discoverable()) {
+                FURI_LOG_E(
+                    TAG,
+                    "Pairing failed as device is not discoverable. Terminating connection for security.");
+                aci_gap_terminate(gap->service.connection_handle, 5);
+                break;
+            }
             // Generate random PIN code
             uint32_t pin = rand() % 999999; //-V1064
             aci_gap_pass_key_resp(gap->service.connection_handle, pin);
@@ -245,6 +255,13 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void* pckt) {
             break;
 
         case ACI_GAP_NUMERIC_COMPARISON_VALUE_VSEVT_CODE: {
+            if (!gap_get_discoverable()) {
+                FURI_LOG_E(
+                    TAG,
+                    "Pairing failed as device is not discoverable. Terminating connection for security.");
+                aci_gap_terminate(gap->service.connection_handle, 5);
+                break;
+            }
             uint32_t pin =
                 ((aci_gap_numeric_comparison_value_event_rp0*)(blue_evt->data))->Numeric_Value;
             FURI_LOG_I(TAG, "Verify numeric comparison: %06lu", pin);
@@ -436,9 +453,11 @@ static void gap_advertise_start(GapState new_state) {
         min_interval,
         max_interval,
         CFG_IDENTITY_ADDRESS,
-        0,
-        strlen(gap->service.adv_name),
-        (uint8_t*)gap->service.adv_name,
+        gap->is_discoverable ? HCI_ADV_FILTER_NO : HCI_ADV_FILTER_ACC_LIST_USED_FOR_ALL,
+        // strlen(gap->service.adv_name),
+        gap->is_discoverable ? strlen(gap->service.adv_name) : 0,
+        // (uint8_t*)gap->service.adv_name,
+        gap->is_discoverable ? (uint8_t*)gap->service.adv_name : NULL,
         gap->service.adv_svc_uuid_len,
         gap->service.adv_svc_uuid,
         0,
@@ -480,6 +499,22 @@ static void gap_advertise_stop() {
     gap->on_event_cb(event, gap->context);
 }
 
+static void gap_advertise_set_discoverable(bool discoverable) {
+    if (gap->is_discoverable != discoverable) {
+        gap->is_discoverable = discoverable;
+        if (gap->enable_adv && gap->state != GapStateConnected) {
+            // Stop advertising
+            tBleStatus status = aci_gap_set_non_discoverable();
+            if(status) {
+                FURI_LOG_E(TAG, "set_non_discoverable in set_discoverable failed %d", status);
+            } else {
+                FURI_LOG_D(TAG, "set_non_discoverable in set_discoverable success");
+            }
+            gap_advertise_start(gap->state); // Start advertising with new settings
+        }
+    }
+}
+
 void gap_start_advertising() {
     furi_mutex_acquire(gap->state_mutex, FuriWaitForever);
     if(gap->state == GapStateIdle) {
@@ -509,6 +544,25 @@ static void gap_advertise_timer_callback(void* context) {
     furi_check(furi_message_queue_put(gap->command_queue, &command, 0) == FuriStatusOk);
 }
 
+void gap_set_discoverable(bool discoverable) {
+    // TODO is this lock needed here?
+    furi_mutex_acquire(gap->state_mutex, FuriWaitForever);
+    FURI_LOG_I(TAG, "Setting discoverability %d", discoverable);
+    GapCommand command = discoverable ? GapCommandSetDiscoverableOn : GapCommandSetDiscoverableOff;
+    furi_check(furi_message_queue_put(gap->command_queue, &command, 0) == FuriStatusOk);
+    furi_mutex_release(gap->state_mutex);
+}
+
+bool gap_get_discoverable() {
+    bool discoverable = false;
+    if (gap) {
+        furi_mutex_acquire(gap->state_mutex, FuriWaitForever);
+        discoverable = gap->is_discoverable;
+        furi_mutex_release(gap->state_mutex);
+    }
+    return discoverable;
+}
+
 bool gap_init(GapConfig* config, GapEventCallback on_event_cb, void* context) {
     if(!ble_glue_is_radio_stack_ready()) {
         return false;
@@ -528,6 +582,7 @@ bool gap_init(GapConfig* config, GapEventCallback on_event_cb, void* context) {
     gap->state = GapStateIdle;
     gap->service.connection_handle = 0xFFFF;
     gap->enable_adv = true;
+    gap->is_discoverable = true;
 
     gap->conn_rssi = 127;
     gap->time_rssi_sample = 0;
@@ -611,6 +666,8 @@ static int32_t gap_app(void* context) {
             gap_advertise_start(GapStateAdvLowPower);
         } else if(command == GapCommandAdvStop) {
             gap_advertise_stop();
+        } else if(command == GapCommandSetDiscoverableOff || command == GapCommandSetDiscoverableOn) {
+            gap_advertise_set_discoverable(command == GapCommandSetDiscoverableOn);
         }
         furi_mutex_release(gap->state_mutex);
     }

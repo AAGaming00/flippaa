@@ -126,6 +126,17 @@ void furi_hal_bt_start_advertising();
  */
 void furi_hal_bt_stop_advertising();
 
+/** Set discoverability
+ * @param discoverable true if discoverable by all, false if discoverable by known devices
+ * @note Restarts advertising if it is running to apply the new filter
+ */
+void furi_hal_bt_set_discoverable(bool discoverable);
+
+/** Get discoverability
+ * @note false if BT is not active
+ */
+bool furi_hal_bt_get_discoverable();
+
 /** Get BT/BLE system component state
  *
  * @param[in]  buffer  FuriString* buffer to write to

@@ -77,6 +77,10 @@ void gap_start_advertising();
 
 void gap_stop_advertising();
 
+void gap_set_discoverable(bool discoverable);
+
+bool gap_get_discoverable();
+
 GapState gap_get_state();
 
 void gap_thread_stop();

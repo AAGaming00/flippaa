@@ -46,7 +46,8 @@ XtremeSettings xtreme_settings = {
 };
 
 FlippaaSettings flippaa_settings = {
-    .align_with_bg = false, // ON
+    .align_with_bg = false, // OFF
+    .bt_is_discoverable = true, // ON
 };
 
 void XTREME_SETTINGS_LOAD() {
@@ -146,6 +147,11 @@ void XTREME_SETTINGS_LOAD() {
         }
         if(flipper_format_read_bool(file, "align_with_bg", &b, 1)) {
             f->align_with_bg = b;
+        } else {
+            flipper_format_rewind(file);
+        }
+        if(flipper_format_read_bool(file, "bt_is_discoverable", &b, 1)) {
+            f->bt_is_discoverable = b;
         } else {
             flipper_format_rewind(file);
         }
@@ -285,6 +291,7 @@ void XTREME_SETTINGS_SAVE() {
         e = x->battery_icon;
         flipper_format_write_uint32(file, "battery_icon", &e, 1);
         flipper_format_write_bool(file, "align_with_bg", &f->align_with_bg, 1);
+        flipper_format_write_bool(file, "bt_is_discoverable", &f->bt_is_discoverable, 1);
         flipper_format_write_bool(file, "statusbar_clock", &x->statusbar_clock, 1);
         flipper_format_write_bool(file, "status_icons", &x->status_icons, 1);
         flipper_format_write_bool(file, "bar_borders", &x->bar_borders, 1);

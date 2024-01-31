@@ -107,7 +107,7 @@ void desktop_lock_menu_draw_callback(Canvas* canvas, void* model) {
             icon = &I_CC_Lock_16x16;
             break;
         case DesktopLockMenuIndexBluetooth:
-            icon = &I_CC_Bluetooth_16x16;
+            icon = m->lock_menu->bt->bt_settings.enabled && furi_hal_bt_get_discoverable() ? &I_CC_Bluetooth_Discoverable_16x16 : &I_CC_Bluetooth_16x16;
             enabled = m->lock_menu->bt->bt_settings.enabled;
             break;
         case DesktopLockMenuIndexXtreme:
@@ -309,6 +309,13 @@ bool desktop_lock_menu_input_callback(InputEvent* event, void* context) {
             default:
                 break;
             }
+        } else if (idx == DesktopLockMenuIndexBluetooth && event->type == InputTypeLong) {
+            // Toggle BT Discoverable
+            FURI_LOG_D("LogMenu", "Toggling Bluetooth Discoverability");
+            bool new_discoverability = !furi_hal_bt_get_discoverable();
+            furi_hal_bt_set_discoverable(new_discoverability);
+            flippaa_settings.bt_is_discoverable = new_discoverability;
+            lock_menu->save_xtreme = true;
         } else if(idx >= 6 && (event->type == InputTypeShort || event->type == InputTypeRepeat)) {
             int8_t offset = 0;
             if(event->key == InputKeyUp) {

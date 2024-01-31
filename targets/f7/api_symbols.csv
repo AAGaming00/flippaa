@@ -1157,6 +1157,7 @@ Function,+,furi_hal_bt_custom_adv_stop,_Bool,
 Function,+,furi_hal_bt_dump_state,void,FuriString*
 Function,+,furi_hal_bt_ensure_c2_mode,_Bool,BleGlueC2Mode
 Function,-,furi_hal_bt_get_conn_rssi,uint32_t,uint8_t*
+Function,+,furi_hal_bt_get_discoverable,_Bool,
 Function,-,furi_hal_bt_get_hardfault_info,const FuriHalBtHardfaultInfo*,
 Function,+,furi_hal_bt_get_key_storage_buff,void,"uint8_t**, uint16_t*"
 Function,+,furi_hal_bt_get_profile_adv_name,const char*,FuriHalBtProfile
@@ -1196,6 +1197,7 @@ Function,+,furi_hal_bt_serial_set_rpc_status,void,FuriHalBtSerialRpcStatus
 Function,+,furi_hal_bt_serial_start,void,
 Function,+,furi_hal_bt_serial_stop,void,
 Function,+,furi_hal_bt_serial_tx,_Bool,"uint8_t*, uint16_t"
+Function,+,furi_hal_bt_set_discoverable,void,_Bool
 Function,+,furi_hal_bt_set_key_storage_change_callback,void,"BleGlueKeyStorageChangedCallback, void*"
 Function,+,furi_hal_bt_set_profile_adv_name,void,"FuriHalBtProfile, const char[( 18 + 1 )]"
 Function,+,furi_hal_bt_set_profile_mac_addr,void,"FuriHalBtProfile, const uint8_t[( 6 )]"
@@ -1832,9 +1834,11 @@ Function,-,gamma,double,double
 Function,-,gamma_r,double,"double, int*"
 Function,-,gammaf,float,float
 Function,-,gammaf_r,float,"float, int*"
+Function,-,gap_get_discoverable,_Bool,
 Function,-,gap_get_remote_conn_rssi,uint32_t,int8_t*
 Function,-,gap_get_state,GapState,
 Function,-,gap_init,_Bool,"GapConfig*, GapEventCallback, void*"
+Function,-,gap_set_discoverable,void,_Bool
 Function,-,gap_start_advertising,void,
 Function,-,gap_stop_advertising,void,
 Function,-,gap_thread_stop,void,
@@ -3589,6 +3593,7 @@ Variable,+,I_ButtonRight_4x7,Icon,
 Variable,+,I_ButtonUp_7x4,Icon,
 Variable,+,I_Button_18x18,Icon,
 Variable,+,I_CC_Bluetooth_16x16,Icon,
+Variable,+,I_CC_Bluetooth_Discoverable_16x16,Icon,
 Variable,+,I_CC_DarkMode_16x16,Icon,
 Variable,+,I_CC_LefthandedMode_16x16,Icon,
 Variable,+,I_CC_Lock_16x16,Icon,

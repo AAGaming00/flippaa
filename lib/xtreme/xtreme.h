@@ -103,6 +103,7 @@ typedef struct {
 
 typedef struct {
     bool align_with_bg;
+    bool bt_is_discoverable;
 } FlippaaSettings;
 
 void XTREME_SETTINGS_LOAD();

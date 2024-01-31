@@ -16,6 +16,8 @@
 #include <services/battery_service.h>
 #include <furi.h>
 
+#include <xtreme/xtreme.h>
+
 #define TAG "FuriHalBt"
 
 /* Time, in ms, to wait for mode transition before crashing */
@@ -338,6 +340,10 @@ bool furi_hal_bt_is_connected() {
 
 void furi_hal_bt_start_advertising() {
     if(gap_get_state() == GapStateIdle) {
+        gap_set_discoverable(flippaa_settings.bt_is_discoverable);
+        while(gap_get_discoverable() != flippaa_settings.bt_is_discoverable) { // TODO PROBABLY VERY DUMB!!!
+            furi_delay_tick(1);
+        }
         gap_start_advertising();
     }
 }
@@ -349,6 +355,25 @@ void furi_hal_bt_stop_advertising() {
             furi_delay_tick(1);
         }
     }
+}
+
+void furi_hal_bt_set_discoverable(bool discoverable) {
+    if(furi_hal_bt_is_active()) {
+        FURI_LOG_D(TAG, "Setting discoverable to %d", discoverable);
+        // TODO remove start stop hack (and above)
+        gap_set_discoverable(discoverable);
+    }
+    // flippaa_settings.bt_is_discoverable = discoverable;
+    // XTREME_SETTINGS_SAVE();
+}
+
+bool furi_hal_bt_get_discoverable() {
+    bool discoverable = false;
+    if(furi_hal_bt_is_active()) {
+        discoverable = gap_get_discoverable();
+        FURI_LOG_D(TAG, "Got BT discoverable: %d", discoverable);
+    }
+    return discoverable;
 }
 
 void furi_hal_bt_update_battery_level(uint8_t battery_level) {
